@@ -1,0 +1,9 @@
+backend/.venv/
+backend/.env
+__pycache__/
+*.pyc
+.pytest_cache/
+frontend/node_modules/
+frontend/dist/
+backend/data/jnj_graph.json
+backend/data/raw_pdfs/*.pdf
