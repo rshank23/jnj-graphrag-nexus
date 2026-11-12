@@ -220,4 +220,5 @@ It uses FastAPI `TestClient` and runs fully offline.
 ## Further reading
 
 - [PITCH.md](PITCH.md): business case, ROI model and pilot ask
+- [docs/JnJ-GraphRAG-Nexus-Demo.pptx](docs/JnJ-GraphRAG-Nexus-Demo.pptx): 20-slide demo deck with live screenshots and speaker notes. Regenerate with `python docs/demo/capture_screenshots.py docs/demo` (app running) and then `python docs/demo/build_deck.py`.
 - [IMPROVEMENTS.md](IMPROVEMENTS.md): prioritised roadmap benchmarked against 9 reference pharma/biomed GraphRAG and MLR repos
