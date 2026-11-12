@@ -12,7 +12,7 @@ PY := $(VENV_BIN)/python
 
 help:
 	@echo "make install   - create backend venv + install Python deps, npm install frontend"
-	@echo "make test      - run the backend end-to-end pytest suite"
+	@echo "make test      - run the full backend pytest suite"
 	@echo "make backend   - run FastAPI on http://localhost:8000"
 	@echo "make frontend  - run Vite dev server on http://localhost:5173"
 	@echo "make dev       - run backend + frontend together (./start.sh)"
@@ -30,7 +30,7 @@ install-frontend:
 	cd frontend && npm install
 
 test:
-	$(PY) -m pytest backend/tests/test_end_to_end.py -v
+	cd backend && $(abspath $(PY)) -m pytest tests -v
 
 backend:
 	cd backend && ../$(PY) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

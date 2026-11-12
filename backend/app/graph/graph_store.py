@@ -33,6 +33,11 @@ NODE_COLORS: Dict[str, str] = {
     NodeType.EvidenceDocument.value: "#94A3B8",
     NodeType.BoxedWarning.value: "#EF4444",
     NodeType.HardwareCoupling.value: "#60A5FA",
+    NodeType.ClinicalTrial.value: "#2DD4BF",
+    NodeType.Publication.value: "#CBD5E1",
+    NodeType.SafetySignal.value: "#FB7185",
+    NodeType.LabelChange.value: "#FACC15",
+    NodeType.Recall.value: "#B91C1C",
 }
 
 # Hub nodes are never traversed *through* during ego expansion, otherwise every

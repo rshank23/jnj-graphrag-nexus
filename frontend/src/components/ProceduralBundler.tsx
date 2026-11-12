@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Cpu, DollarSign, Loader2, Package, Percent, ShieldPlus, Stethoscope, TrendingUp } from "lucide-react";
+import { Activity, Cpu, DollarSign, FileDown, Loader2, Package, Percent, ShieldPlus, Stethoscope, TrendingUp } from "lucide-react";
 import { api } from "../api/client";
 import type { BundleItem, BundleResponse, GraphNodeData } from "../types/graph";
 
@@ -82,6 +82,7 @@ export default function ProceduralBundler({ refreshKey }: { refreshKey: number }
   const [bundle, setBundle] = useState<BundleResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     api
@@ -119,7 +120,7 @@ export default function ProceduralBundler({ refreshKey }: { refreshKey: number }
 
   return (
     <div className="space-y-4">
-      <div className="panel grid gap-4 p-4 lg:grid-cols-[1.3fr_1.5fr_auto]">
+      <div className="panel grid gap-4 p-4 lg:grid-cols-[1.3fr_1.5fr_auto_auto]">
         <div>
           <label className="label-xs mb-1.5 flex items-center gap-1.5">
             <Stethoscope size={12} /> Target Procedure
@@ -171,6 +172,23 @@ export default function ProceduralBundler({ refreshKey }: { refreshKey: number }
             post-op consumables
           </span>
         </label>
+        <button
+          className="btn-ghost self-center"
+          disabled={!bundle || exporting}
+          title="Download a value-analysis-committee (VAC) proposal as Word"
+          onClick={async () => {
+            setExporting(true);
+            try {
+              await api.bundleDocx({ procedure_id: procedureId, annual_procedure_volume: volume, include_post_op_consumables: postOp });
+            } catch (e) {
+              setError((e as Error).message);
+            } finally {
+              setExporting(false);
+            }
+          }}
+        >
+          {exporting ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />} VAC proposal (.docx)
+        </button>
       </div>
 
       {error && <div className="rounded-lg border border-red-900 bg-red-950/40 px-4 py-2 text-sm text-red-300">{error}</div>}

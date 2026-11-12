@@ -11,6 +11,28 @@ recommendation lists:
 > **Licensing:** none of the indexed reference repos contains a LICENSE file in the index. Treat them as
 > *design references only*. Re-implement the patterns; do not copy their code.
 
+## Implementation status
+
+All 15 recommendations are implemented. They are clean-room re-implementations: no reference code was copied. They are covered by `backend/tests/test_improvements.py`, and the frontend was verified live against real openFDA, ClinicalTrials.gov and PubMed endpoints.
+
+| # | Recommendation | Status | Where |
+|---|---|---|---|
+| 1 | MLR pre-review pipeline | ✅ Done | `app/mlr/` (claims, 10 checks, precedents, decisions, claims library, DOCX) · UI **MLR Pre-Review** tab |
+| 2 | Evaluation harness | ✅ Done | `app/evals/` (40 golden queries) · `docs/EVAL.md` · CI regression gate · UI **Run eval** |
+| 3 | Guardrails + confidence | ✅ Done | `app/guardrails.py` (PHI redaction, injection block, scope gate, commercial off-label gate, output check) · confidence/risk in every answer |
+| 4 | Sanctioned regulatory connectors | ✅ Done | `app/ingestion/connectors/` (openFDA label/FAERS/enforcement/GUDID/MAUDE, ClinicalTrials.gov, PubMed, RxNorm) |
+| 5 | Retry, cache, incremental refresh | ✅ Done | `app/core/http.py` (retry + TTL cache) · per-source freshness in `GET /api/sources/status` · `AUTO_REFRESH_HOURS` |
+| 6 | Label-change monitoring | ✅ Done | section diffs → `LabelChange` nodes; MLR `label_change` check flags affected assets |
+| 7 | Retrieval upgrades | ✅ Done | ONNX MiniLM embedder (torch-free), entity-mention seeding, safety-intent boost, RRF + 2-hop |
+| 8 | Pharmacovigilance signals | ✅ Done | `connectors/signals.py` PRR/ROR/χ² (Evans) → `SafetySignal` nodes; MLR `safety_signals` check |
+| 9 | LLM routing + cost | ✅ Done | `app/llm/router.py` Azure OpenAI → OpenAI → Gemini → local; YAML prompts in `app/prompts/`; per-call token/cost metering |
+| 10 | Observability, metering, audit | ✅ Done | OpenTelemetry spans, `@observe` tool-call metering, SHA-256 hash-chained append-only audit log (`/api/audit/verify`) |
+| 11 | Access control | ✅ Done | API keys + Entra ID bearer, roles commercial/medical/mlr/admin, role-gated endpoints |
+| 12 | MCP server | ✅ Done | `app/mcp_server.py`, 6 tools over stdio JSON-RPC |
+| 13 | Two-phase expansion | ✅ Done | `POST /api/expand` (identity → background evidence fan-out) · UI **Expand portfolio** |
+| 14 | Reports and exports | ✅ Done | MLR review DOCX, bundle VAC proposal DOCX |
+| 15 | Frontend + tests | ✅ Done | new MLR / Ops tabs, role selector, feedback, evidence ingestion modes · CI builds the frontend |
+
 ---
 
 ## 0. Benchmark at a glance

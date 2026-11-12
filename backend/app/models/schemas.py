@@ -18,6 +18,11 @@ class NodeType(str, Enum):
     EvidenceDocument = "EvidenceDocument"
     BoxedWarning = "BoxedWarning"
     HardwareCoupling = "HardwareCoupling"
+    ClinicalTrial = "ClinicalTrial"
+    Publication = "Publication"
+    SafetySignal = "SafetySignal"
+    LabelChange = "LabelChange"
+    Recall = "Recall"
 
 
 class EdgeType(str, Enum):
@@ -36,6 +41,11 @@ class EdgeType(str, Enum):
     SUPPORTED_BY_EVIDENCE = "SUPPORTED_BY_EVIDENCE"
     HAS_BOXED_WARNING = "HAS_BOXED_WARNING"
     COMPATIBLE_COUPLING = "COMPATIBLE_COUPLING"
+    STUDIED_IN = "STUDIED_IN"
+    CITED_IN = "CITED_IN"
+    HAS_SAFETY_SIGNAL = "HAS_SAFETY_SIGNAL"
+    HAS_LABEL_CHANGE = "HAS_LABEL_CHANGE"
+    HAS_RECALL = "HAS_RECALL"
 
 
 class GraphNode(BaseModel):
@@ -105,10 +115,18 @@ class AgentQueryResponse(BaseModel):
     subgraph: Dict[str, Any]
     citations: List[Dict[str, Any]]
     latency_ms: float
+    confidence: float = 0.0
+    risk_level: str = "low"
+    guardrails: List[Dict[str, Any]] = Field(default_factory=list)
+    in_scope: bool = True
+    query_id: Optional[int] = None
+    disclaimer: Optional[str] = None
+    llm: Optional[Dict[str, Any]] = None
 
 
 class IngestSyncRequest(BaseModel):
-    mode: str = Field(default="text", description="one of: live, dailymed, text, url")
+    mode: str = Field(default="text", description="one of: live, dailymed, text, url, pdf, openfda_label, faers, drug_recalls, "
+                                                  "device_recalls, gudid, maude, clinicaltrials, pubmed, expand")
     drug_name: Optional[str] = None
     url: Optional[str] = None
     product_name: Optional[str] = None
@@ -139,3 +157,38 @@ class IngestSyncResponse(BaseModel):
     added_edges: List[GraphEdge]
     node_count: int
     edge_count: int
+
+
+class MLRReviewRequest(BaseModel):
+    text: str = Field(..., min_length=10, max_length=60000)
+    title: Optional[str] = None
+    use_llm: bool = True
+
+
+class MLRDecisionRequest(BaseModel):
+    finding_id: str
+    decision: str = Field(..., pattern="^(accepted|rejected|revision)$")
+    rationale: Optional[str] = Field(default=None, max_length=2000)
+
+
+class FeedbackRequest(BaseModel):
+    query_id: Optional[int] = None
+    rating: int = Field(..., ge=-1, le=1)
+    comment: Optional[str] = Field(default=None, max_length=2000)
+
+
+class ExpandRequest(BaseModel):
+    name: str = Field(..., min_length=2, max_length=120)
+    division: Optional[str] = None
+    background: bool = True
+
+
+class SourceSyncRequest(BaseModel):
+    name: str = Field(..., min_length=2, max_length=120)
+
+
+class ApiKeyRequest(BaseModel):
+    name: str = Field(..., min_length=2, max_length=80)
+    role: str = Field(..., pattern="^(commercial|medical|mlr|admin)$")
+    tier: str = "standard"
+    monthly_limit: int = Field(default=10000, ge=1)

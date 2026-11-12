@@ -6,7 +6,6 @@ import re
 import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-import httpx
 from langgraph.graph import END, StateGraph
 
 from app.agents.state import AgentState
@@ -14,6 +13,11 @@ from app.config import get_settings
 from app.graph.graph_store import HUB_TYPES, NODE_COLORS
 from app.graph.seed_data import IM, MT
 from app.models.schemas import AgentQueryRequest, AgentQueryResponse, BundleRequest, EdgeType, NodeType
+from app.core.db import get_db
+from app.core.telemetry import current_actor, current_role, observe
+from app.guardrails import CLINICAL_DISCLAIMER, RiskLevel, check_input, check_output, estimate_confidence
+from app.llm.router import Completion, get_router
+from app.rag.entity_resolver import get_resolver, kenvue_mentions
 from app.rag.hybrid_retriever import HybridGraphRetriever, get_retriever
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -89,7 +93,7 @@ def _cell(text: Optional[str], limit: int = 140) -> str:
 
 def _focus_nodes(store: "GraphStore", retrieval: Dict[str, Any], division: Optional[str], types: set, limit: int = 4) -> List[str]:
     out: List[str] = []
-    for nid in retrieval.get("entity_mentions", []) + retrieval.get("seeds", []) + [p["id"] for p in retrieval.get("reranked_passages", []) if p["type"] == "passage"]:
+    for nid in retrieval.get("entity_mentions", []) + retrieval.get("seeds", []) + [p["node_ids"][0] for p in retrieval.get("reranked_passages", []) if p["type"] == "passage"]:
         d = store.graph.nodes.get(nid)
         if not d or d["label"] not in types or nid in out:
             continue
@@ -158,7 +162,10 @@ class SupervisorRunner:
             f"2-Hop Graph Expansion: {len(retrieval['subgraph']['nodes'])} nodes / {len(retrieval['subgraph']['links'])} edges "
             f"from {len(retrieval['seeds'])} seed entities ({t['graph_expansion']} ms)",
             f"Cross-Encoder Reranker: {m['reranker']} scored passages + serialized graph paths, kept "
-            f"{len(retrieval['reranked_passages'])} ({t['rerank']} ms)",
+            f"{len(retrieval['reranked_passages'])} ({t['rerank']} ms; {m['diversification']}"
+            f"{', safety-section boost' if retrieval.get('safety_intent') else ''})",
+            f"Scope Gate: in_scope={retrieval['scope']['in_scope']} (top score {retrieval['scope']['top_score']}, "
+            f"{retrieval['scope']['entity_mentions']} resolved entities); Steiner-pruned context {len(retrieval['pruned_node_ids'])} nodes",
         ]
         return {"retrieval": retrieval, "routed_agent": agent, "route_scores": scores, "route_reason": reason, "execution_trace": trace}
 
@@ -329,8 +336,9 @@ class SupervisorRunner:
         passages = retrieval["reranked_passages"]
         citations = {c["id"]: c for c in state.get("citations", [])}
         for p in passages:
-            if p.get("label") == NodeType.EvidenceDocument.value and p["id"] not in citations:
-                citations[p["id"]] = _citation(self.store, p["id"])
+            doc_id = p["node_ids"][0] if p.get("node_ids") else p["id"]
+            if p.get("label") == NodeType.EvidenceDocument.value and doc_id not in citations:
+                citations[doc_id] = _citation(self.store, doc_id)
         cites = list(citations.values())
         for i, c in enumerate(cites, start=1):
             c["index"] = i
@@ -343,7 +351,8 @@ class SupervisorRunner:
             md.append("\n### Citations\n")
             md.extend(f"[{c['index']}] {c['title']}" + (f" — {c['source_url']}" if c.get("source_url") else "") for c in cites)
         draft = "\n".join(md)
-        answer = _llm_polish(state["query"], draft) or draft
+        completion = _llm_polish(state["query"], draft)
+        answer = completion.text if completion else draft
 
         sub = _merge_subgraphs(state.get("agent_subgraph", {}), retrieval["subgraph"])
         focus = set(state.get("focus_node_ids", [])) | set(retrieval["seeds"])
@@ -354,23 +363,30 @@ class SupervisorRunner:
             n.setdefault("color", NODE_COLORS.get(n["label"], "#CBD5E1"))
         sub["links"] = [l for l in sub["links"] if l["source"] in keep and l["target"] in keep]
         mode = get_settings().llm_mode
+        llm = None
+        if completion:
+            llm = {"provider": completion.provider, "model": completion.model, "prompt_version": completion.prompt_version,
+                   "cost_usd": completion.cost_usd, "latency_ms": completion.latency_ms}
         return {
             "answer_markdown": answer,
             "subgraph": sub,
             "reranked_passages": passages,
             "citations": cites,
+            "llm": llm,
             "execution_trace": [f"Response Synthesizer: {len(cites)} citations, subgraph {len(sub['nodes'])} nodes / "
-                                f"{len(sub['links'])} edges, generation mode={mode}"],
+                                f"{len(sub['links'])} edges, generation mode={mode}"
+                                + (f" ({completion.provider}/{completion.model}, prompt {completion.prompt_version})"
+                                   if completion else " (deterministic grounded template)")],
         }
 
     # ------------------------------------------------------------------ graph
     def _build(self):
         g = StateGraph(AgentState)
-        g.add_node("supervisor_router", self.supervisor_router)
-        g.add_node(MEDTECH, self.medtech_bundler_agent)
-        g.add_node(PHARMA, self.pharma_clinical_agent)
-        g.add_node(REGULATORY, self.regulatory_auditor_agent)
-        g.add_node("response_synthesizer", self.response_synthesizer)
+        g.add_node("supervisor_router", observe("agent.supervisor_router")(self.supervisor_router))
+        g.add_node(MEDTECH, observe("agent.medtech_bundler")(self.medtech_bundler_agent))
+        g.add_node(PHARMA, observe("agent.pharma_clinical")(self.pharma_clinical_agent))
+        g.add_node(REGULATORY, observe("agent.regulatory_auditor")(self.regulatory_auditor_agent))
+        g.add_node("response_synthesizer", observe("agent.response_synthesizer")(self.response_synthesizer))
         g.set_entry_point("supervisor_router")
         g.add_conditional_edges("supervisor_router", lambda s: s["routed_agent"], {MEDTECH: MEDTECH, PHARMA: PHARMA, REGULATORY: REGULATORY})
         for a in (MEDTECH, PHARMA, REGULATORY):
@@ -378,45 +394,112 @@ class SupervisorRunner:
         g.add_edge("response_synthesizer", END)
         return g.compile()
 
-    def run(self, request: AgentQueryRequest) -> AgentQueryResponse:
+    def _blocked(self, request: AgentQueryRequest, t0: float, agent: str, message: str, findings: List[Dict[str, Any]],
+                 risk: RiskLevel) -> AgentQueryResponse:
+        resp = AgentQueryResponse(query=request.query, routed_agent=agent, execution_trace=[f"Guardrail: {message}"],
+                                  answer_markdown=f"**Request not processed.** {message}", reranked_passages=[],
+                                  subgraph={"nodes": [], "links": []}, citations=[], latency_ms=round((time.perf_counter() - t0) * 1000, 2),
+                                  confidence=0.0, risk_level=risk.value, guardrails=findings, in_scope=False, disclaimer=CLINICAL_DISCLAIMER)
+        resp.query_id = _log(resp, request.query)
+        return resp
+
+    def commercial_off_label(self, query: str) -> List[Tuple[str, str]]:
+        """(product, condition) pairs a commercial user asked about that are outside the product's INDICATED_FOR edges."""
+        from app.mlr.claims import _match_conditions, condition_lexicon
+
+        conditions = _match_conditions(query, condition_lexicon(self.store))
+        if not conditions:
+            return []
+        out = []
+        for hit in get_resolver(self.store).resolve(query):
+            pid = str(hit["id"])
+            indicated = {t for _, t, _ in self.store.out_edges(pid, EdgeType.INDICATED_FOR.value)}
+            if self.store.graph.nodes[pid]["label"] != NodeType.Product.value or not indicated:
+                continue
+            out += [(self.store.graph.nodes[pid]["name"], self.store.graph.nodes[c]["name"]) for c in conditions if c not in indicated]
+        return out
+
+    def run(self, request: AgentQueryRequest, role: Optional[str] = None, actor: Optional[str] = None) -> AgentQueryResponse:
         t0 = time.perf_counter()
-        final = self.graph.invoke({"query": request.query, "max_hops": request.max_hops, "top_k": request.top_k, "execution_trace": []})
-        return AgentQueryResponse(
+        role = role or current_role.get() or "medical"
+        actor = actor or current_actor.get()
+        gin = check_input(request.query)
+        if gin.blocked:
+            return self._blocked(request, t0, "guardrail", "The query matched a prompt-injection pattern and was blocked.",
+                                 gin.findings, RiskLevel.blocked)
+        query = gin.text
+        kenvue = kenvue_mentions(query)
+        if kenvue:
+            return self._blocked(request, t0, "scope_gate", f"{', '.join(kenvue)} is a Kenvue consumer-health brand and outside the J&J "
+                                 "Innovative Medicine / MedTech portfolio.", gin.findings + [{"type": "kenvue_out_of_scope",
+                                 "detail": f"Kenvue brand(s) {kenvue}"}], RiskLevel.high)
+        if role == "commercial":
+            off = self.commercial_off_label(query)
+            if off:
+                return self._blocked(request, t0, "role_gate", "Commercial users cannot discuss uses outside approved labeling ("
+                                     + "; ".join(f"{p} for {c}" for p, c in off[:3]) + "). Route the question to Medical Affairs / MSL.",
+                                     gin.findings + [{"type": "off_label_commercial", "detail": str(off[:3])}], RiskLevel.high)
+
+        final = self.graph.invoke({"query": query, "max_hops": request.max_hops, "top_k": request.top_k, "execution_trace": []})
+        retrieval = final["retrieval"]
+        cites = final["citations"]
+        passages = final["reranked_passages"]
+        provenance = sum(1 for c in cites if c.get("source_url")) / len(cites) if cites else None
+        confidence = estimate_confidence(passages, len(cites), len(retrieval["entity_mentions"]), provenance)
+        in_scope = retrieval["scope"]["in_scope"]
+        answer = final["answer_markdown"]
+        if not in_scope:
+            confidence = min(confidence, 0.2)
+            answer = ("> **Low relevance:** no J&J portfolio entity or strong evidence matched this question. The closest graph "
+                      "evidence is shown below; treat it as unverified.\n\n" + answer)
+        safety_ctx = bool(retrieval.get("safety_intent")) or any(p.get("safety_boosted") for p in passages[:3])
+        gout = check_output(answer, len(cites), confidence, get_settings().min_answer_confidence, safety_ctx)
+        for f in gin.findings:
+            gout.findings.insert(0, f)
+        gout.escalate(gin.risk_level)
+        if not in_scope:
+            gout.findings.append({"type": "out_of_scope", "detail": "No resolved J&J entity and top evidence score below threshold"})
+        trace = final["execution_trace"][:-1] + [
+            f"Guardrails: input {gin.risk_level.value}, output risk={gout.risk_level.value}, confidence={confidence:.2f}, "
+            f"checks={[f['type'] for f in gout.findings] or 'clear'}"] + final["execution_trace"][-1:]
+        resp = AgentQueryResponse(
             query=request.query,
             routed_agent=AGENT_LABELS[final["routed_agent"]],
-            execution_trace=final["execution_trace"],
-            answer_markdown=final["answer_markdown"],
-            reranked_passages=final["reranked_passages"],
+            execution_trace=trace,
+            answer_markdown=answer + "\n\n" + CLINICAL_DISCLAIMER,
+            reranked_passages=passages,
             subgraph=final["subgraph"],
-            citations=final["citations"],
+            citations=cites,
             latency_ms=round((time.perf_counter() - t0) * 1000, 2),
+            confidence=confidence,
+            risk_level=gout.risk_level.value,
+            guardrails=gout.findings,
+            in_scope=in_scope,
+            disclaimer=CLINICAL_DISCLAIMER,
+            llm=final.get("llm"),
         )
+        resp.query_id = _log(resp, query, actor, role)
+        return resp
 
 
-def _llm_polish(query: str, grounded_draft: str) -> Optional[str]:
-    """Optionally rewrite the grounded draft with a hosted LLM; returns None in local deterministic mode or on failure."""
-    s = get_settings()
-    instruction = ("You are a J&J enterprise analyst. Rewrite the grounded draft into a concise, well-structured Markdown answer to the "
-                   "question. Use ONLY facts in the draft, keep all tables, numbers, warnings and the Citations section verbatim. "
-                   "Never mention Kenvue consumer brands.")
-    prompt = f"Question: {query}\n\nGrounded draft:\n{grounded_draft}"
+def _log(resp: AgentQueryResponse, query: str, actor: Optional[str] = None, role: Optional[str] = None) -> Optional[int]:
     try:
-        if s.openai_api_key:
-            r = httpx.post("https://api.openai.com/v1/chat/completions", timeout=45,
-                           headers={"Authorization": f"Bearer {s.openai_api_key}"},
-                           json={"model": s.openai_model, "temperature": 0.1,
-                                 "messages": [{"role": "system", "content": instruction}, {"role": "user", "content": prompt}]})
-            r.raise_for_status()
-            return r.json()["choices"][0]["message"]["content"]
-        if s.gemini_api_key:
-            r = httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{s.gemini_model}:generateContent",
-                           params={"key": s.gemini_api_key}, timeout=45,
-                           json={"contents": [{"parts": [{"text": instruction + "\n\n" + prompt}]}], "generationConfig": {"temperature": 0.1}})
-            r.raise_for_status()
-            return r.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as exc:
-        logger.warning("LLM polish failed (%s); returning deterministic grounded answer", exc)
-    return None
+        return get_db().log_query(query, resp.routed_agent, resp.latency_ms, resp.confidence, resp.risk_level, len(resp.citations),
+                                  actor or current_actor.get(), role or current_role.get(), (resp.llm or {}).get("cost_usd", 0.0))
+    except Exception:  # pragma: no cover - logging must never break answering
+        logger.warning("query_log write failed", exc_info=True)
+        return None
+
+
+def _llm_polish(query: str, grounded_draft: str) -> Optional[Completion]:
+    """Optionally rewrite the grounded draft via the ModelRouter (Azure OpenAI -> OpenAI -> Gemini); None in deterministic mode."""
+    completion = get_router().complete("answer_polish", query=query, draft=grounded_draft)
+    if completion is None:
+        return None
+    if check_output(completion.text, 1, 1.0, 0.0, False).risk_level == RiskLevel.high:
+        logger.warning("LLM polish introduced unsupported claim language; falling back to grounded draft")
+        return None
+    return completion
 
 
 _runner: Optional[SupervisorRunner] = None

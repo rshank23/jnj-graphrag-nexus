@@ -1,7 +1,20 @@
 import { useState } from "react";
-import { AlertOctagon, CheckCircle2, FileUp, Globe, Link2, Loader2, Pill, Type, X } from "lucide-react";
+import { AlertOctagon, CheckCircle2, FileUp, Globe, Link2, Loader2, Pill, ShieldCheck, Type, X } from "lucide-react";
 import { api } from "../api/client";
-import type { IngestMode, IngestResponse } from "../types/graph";
+import type { EvidenceMode, IngestMode, IngestResponse } from "../types/graph";
+
+const EVIDENCE: { id: EvidenceMode; label: string; placeholder: string }[] = [
+  { id: "openfda_label", label: "openFDA drug label (indications, boxed warning, label-change diff)", placeholder: "TREMFYA" },
+  { id: "faers", label: "FAERS adverse events + PRR/ROR disproportionality signals", placeholder: "CARVYKTI" },
+  { id: "drug_recalls", label: "openFDA drug enforcement / recalls", placeholder: "RISPERDAL" },
+  { id: "device_recalls", label: "openFDA device recalls", placeholder: "ACUVUE" },
+  { id: "gudid", label: "AccessGUDID device identifiers (UDI)", placeholder: "CARTO" },
+  { id: "maude", label: "MAUDE device adverse events", placeholder: "VELYS" },
+  { id: "clinicaltrials", label: "ClinicalTrials.gov studies", placeholder: "RYBREVANT" },
+  { id: "pubmed", label: "PubMed publications", placeholder: "amivantamab" },
+  { id: "expand", label: "Expand: run every applicable source for one product", placeholder: "SPRAVATO" },
+];
+const isEvidence = (m: IngestMode) => EVIDENCE.some((e) => e.id === m);
 
 const MODES: { id: IngestMode; label: string; icon: typeof Globe; hint: string }[] = [
   { id: "live", label: "Live J&J Scrape", icon: Globe, hint: "Crawl jnj.com Innovative Medicine & MedTech product pages (Kenvue brands auto-rejected)." },
@@ -9,6 +22,7 @@ const MODES: { id: IngestMode; label: string; icon: typeof Globe; hint: string }
   { id: "url", label: "Product URL", icon: Link2, hint: "Scrape a single jnj.com / jnjmedtech.com / DailyMed page." },
   { id: "text", label: "Custom Text", icon: Type, hint: "Paste a product description or label excerpt to extract entities." },
   { id: "pdf", label: "Label PDF", icon: FileUp, hint: "Upload an FDA prescribing-information PDF (boxed warnings, contraindications, indications)." },
+  { id: "openfda_label", label: "Evidence APIs", icon: ShieldCheck, hint: "Pull regulatory & scientific evidence (openFDA, FAERS, recalls, GUDID, MAUDE, ClinicalTrials.gov, PubMed) into the graph with provenance." },
 ];
 
 interface Props {
@@ -19,6 +33,7 @@ interface Props {
 
 export default function IngestionModal({ open, onClose, onIngested }: Props) {
   const [mode, setMode] = useState<IngestMode>("live");
+  const [evMode, setEvMode] = useState<EvidenceMode>("openfda_label");
   const [drugName, setDrugName] = useState("CARVYKTI");
   const [url, setUrl] = useState("https://www.jnj.com/innovativemedicine");
   const [productName, setProductName] = useState("");
@@ -41,8 +56,8 @@ export default function IngestionModal({ open, onClose, onIngested }: Props) {
       const fields =
         mode === "live"
           ? { max_pages: maxPages }
-          : mode === "dailymed"
-            ? { drug_name: drugName }
+          : mode === "dailymed" || isEvidence(mode)
+            ? { drug_name: drugName, division }
             : mode === "url"
               ? { url, division }
               : { product_name: productName || undefined, product_text: productText || undefined, division, franchise: franchise || undefined };
@@ -59,7 +74,7 @@ export default function IngestionModal({ open, onClose, onIngested }: Props) {
   const canSubmit =
     !busy &&
     (mode === "live" ||
-      (mode === "dailymed" && drugName.trim()) ||
+      ((mode === "dailymed" || isEvidence(mode)) && drugName.trim()) ||
       (mode === "url" && url.trim()) ||
       (mode === "text" && productText.trim()) ||
       (mode === "pdf" && file));
@@ -80,19 +95,19 @@ export default function IngestionModal({ open, onClose, onIngested }: Props) {
           </button>
         </div>
 
-        <div className="mb-4 grid grid-cols-5 gap-1.5">
+        <div className="mb-4 grid grid-cols-6 gap-1.5">
           {MODES.map((m) => {
             const Icon = m.icon;
             return (
               <button
                 key={m.id}
                 onClick={() => {
-                  setMode(m.id);
+                  setMode(m.id === "openfda_label" ? evMode : m.id);
                   setResult(null);
                   setError(null);
                 }}
                 className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-[11px] font-medium transition ${
-                  mode === m.id ? "border-jnj bg-jnj/15 text-white" : "border-slate-800 text-slate-400 hover:border-slate-600"
+                  (m.id === "openfda_label" ? isEvidence(mode) : mode === m.id) ? "border-jnj bg-jnj/15 text-white" : "border-slate-800 text-slate-400 hover:border-slate-600"
                 }`}
               >
                 <Icon size={16} />
@@ -101,7 +116,7 @@ export default function IngestionModal({ open, onClose, onIngested }: Props) {
             );
           })}
         </div>
-        <p className="mb-4 text-xs text-slate-500">{MODES.find((m) => m.id === mode)?.hint}</p>
+        <p className="mb-4 text-xs text-slate-500">{MODES.find((m) => m.id === (isEvidence(mode) ? "openfda_label" : mode))?.hint}</p>
 
         <div className="space-y-3">
           {mode === "live" && (
@@ -110,7 +125,28 @@ export default function IngestionModal({ open, onClose, onIngested }: Props) {
               <input type="number" min={1} max={10} className="input mt-1" value={maxPages} onChange={(e) => setMaxPages(Math.max(1, Math.min(10, Number(e.target.value) || 1)))} />
             </div>
           )}
-          {mode === "dailymed" && (
+          {isEvidence(mode) && (
+            <div>
+              <label className="label-xs">Evidence source</label>
+              <select
+                className="input mt-1"
+                value={mode}
+                onChange={(e) => {
+                  const v = e.target.value as EvidenceMode;
+                  setEvMode(v);
+                  setMode(v);
+                  setDrugName(EVIDENCE.find((x) => x.id === v)?.placeholder ?? drugName);
+                }}
+              >
+                {EVIDENCE.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {(mode === "dailymed" || isEvidence(mode)) && (
             <div>
               <label className="label-xs">Drug / brand name</label>
               <input className="input mt-1" value={drugName} onChange={(e) => setDrugName(e.target.value)} placeholder="e.g. CARVYKTI, OPSYNVI, Tylenol (will be rejected)" />
@@ -150,7 +186,7 @@ export default function IngestionModal({ open, onClose, onIngested }: Props) {
               />
             </div>
           )}
-          {mode !== "live" && mode !== "dailymed" && (
+          {mode !== "live" && mode !== "dailymed" && (!isEvidence(mode) || mode === "expand") && (
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label-xs">Division</label>
@@ -159,7 +195,7 @@ export default function IngestionModal({ open, onClose, onIngested }: Props) {
                   <option>J&amp;J MedTech</option>
                 </select>
               </div>
-              {mode !== "url" && (
+              {mode !== "url" && mode !== "expand" && (
                 <div>
                   <label className="label-xs">Franchise (optional)</label>
                   <input className="input mt-1" value={franchise} onChange={(e) => setFranchise(e.target.value)} placeholder="e.g. Oncology" />

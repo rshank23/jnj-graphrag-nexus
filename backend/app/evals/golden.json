@@ -1,0 +1,340 @@
+[
+ {
+  "id": "Q01",
+  "query": "Build a bundle for catheter ablation of atrial fibrillation",
+  "expected_nodes": [
+   "PROC_AFIB_ABLATION",
+   "MT_CARTO_3_V8"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q02",
+  "query": "Which CARTO software modules work with 3D CT segmentation?",
+  "expected_nodes": [
+   "MT_CARTOSEG_CT",
+   "MT_CARTO_3_V8"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q03",
+  "query": "Cross-sell Ethicon consumables after robotic knee arthroplasty",
+  "expected_nodes": [
+   "PROC_TKA_ROBOTIC",
+   "MT_VELYS_ROBOT"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q04",
+  "query": "What saw blades are compatible with the VELYS robot?",
+  "expected_nodes": [
+   "MT_ACRION_BLADES",
+   "MT_VELYS_ROBOT"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q05",
+  "query": "Bill of materials for intravascular lithotripsy PCI",
+  "expected_nodes": [
+   "PROC_CALCIFIED_PCI",
+   "MT_SHOCKWAVE_JAVELIN"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q06",
+  "query": "Shockwave IVL generator and Javelin catheter deal for a hospital",
+  "expected_nodes": [
+   "MT_SHOCKWAVE_IVL_GENERATOR",
+   "MT_SHOCKWAVE_JAVELIN"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q07",
+  "query": "Which guiding sheath is used with CARTO for afib ablation?",
+  "expected_nodes": [
+   "MT_CARTO_VIZIGO"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q08",
+  "query": "Intracardiac ultrasound catheter for electrophysiology procedures",
+  "expected_nodes": [
+   "MT_ACUNAV_CRYSTAL"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q09",
+  "query": "ATTUNE knee implant used with VELYS TKA",
+  "expected_nodes": [
+   "MT_ATTUNE_KNEE",
+   "PROC_TKA_ROBOTIC"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q10",
+  "query": "BIOPATCH and BLAKE drain consumables for post-op",
+  "expected_nodes": [
+   "MT_BIOPATCH_CHG",
+   "MT_BLAKE_DRAIN"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q11",
+  "query": "MONOCRYL Plus antibacterial suture cross-sell",
+  "expected_nodes": [
+   "MT_MONOCRYL_PLUS"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q12",
+  "query": "CARTOMERGE image integration module",
+  "expected_nodes": [
+   "MT_CARTOMERGE"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q13",
+  "query": "ROI of the CARTO PRIME mapping module",
+  "expected_nodes": [
+   "MT_CARTO_PRIME"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q14",
+  "query": "CARTOREPLAY and CARTO ELEVATE software",
+  "expected_nodes": [
+   "MT_CARTOREPLAY",
+   "MT_CARTO_ELEVATE"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q15",
+  "query": "TECNIS Odyssey intraocular lens",
+  "expected_nodes": [
+   "MT_TECNIS_ODYSSEY"
+  ],
+  "expected_agent": "medtech_bundler"
+ },
+ {
+  "id": "Q16",
+  "query": "How do OPSUMIT and UPTRAVI work together in pulmonary arterial hypertension?",
+  "expected_nodes": [
+   "IM_OPSUMIT",
+   "IM_UPTRAVI"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q17",
+  "query": "Mechanism of OPSYNVI macitentan and tadalafil combination",
+  "expected_nodes": [
+   "IM_OPSYNVI"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q18",
+  "query": "Which drugs are indicated for multiple myeloma?",
+  "expected_nodes": [
+   "IM_CARVYKTI",
+   "IM_DARZALEX_FASPRO"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q19",
+  "query": "CARVYKTI CAR-T therapy mechanism",
+  "expected_nodes": [
+   "IM_CARVYKTI"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q20",
+  "query": "TREMFYA guselkumab for psoriasis",
+  "expected_nodes": [
+   "IM_TREMFYA"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q21",
+  "query": "ICOTYDE icotrokinra oral therapy for psoriasis",
+  "expected_nodes": [
+   "IM_ICOTYDE"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q22",
+  "query": "SPRAVATO esketamine for treatment-resistant depression",
+  "expected_nodes": [
+   "IM_SPRAVATO"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q23",
+  "query": "CAPLYTA lumateperone for schizophrenia",
+  "expected_nodes": [
+   "IM_CAPLYTA"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q24",
+  "query": "RYBREVANT FASPRO amivantamab in NSCLC",
+  "expected_nodes": [
+   "IM_RYBREVANT_FASPRO"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q25",
+  "query": "ERLEADA apalutamide prostate cancer pathway",
+  "expected_nodes": [
+   "IM_ERLEADA"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q26",
+  "query": "AKEEGA niraparib abiraterone combination",
+  "expected_nodes": [
+   "IM_AKEEGA"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q27",
+  "query": "BALVERSA erdafitinib FGFR pathway in urothelial cancer",
+  "expected_nodes": [
+   "IM_BALVERSA"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q28",
+  "query": "IMAAVY nipocalimab mechanism",
+  "expected_nodes": [
+   "IM_IMAAVY"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q29",
+  "query": "INLEXZO gemcitabine intravesical system for bladder cancer",
+  "expected_nodes": [
+   "IM_INLEXZO"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q30",
+  "query": "EDURANT rilpivirine HIV therapy",
+  "expected_nodes": [
+   "IM_EDURANT"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q31",
+  "query": "CONCERTA methylphenidate extended release",
+  "expected_nodes": [
+   "IM_CONCERTA"
+  ],
+  "expected_agent": "pharma_clinical"
+ },
+ {
+  "id": "Q32",
+  "query": "Audit the claims for CARVYKTI against the FDA label",
+  "expected_nodes": [
+   "IM_CARVYKTI",
+   "DOC_FDA_CARVYKTI_SPL"
+  ],
+  "expected_agent": "regulatory_auditor"
+ },
+ {
+  "id": "Q33",
+  "query": "What is the provenance of the CARTO 3 V8 claims?",
+  "expected_nodes": [
+   "MT_CARTO_3_V8",
+   "DOC_CARTO3_IFU_V8"
+  ],
+  "expected_agent": "regulatory_auditor"
+ },
+ {
+  "id": "Q34",
+  "query": "Show the Windchill evidence lineage for MedTech claims",
+  "expected_nodes": [
+   "DOC_WINDCHILL_502735931"
+  ],
+  "expected_agent": "regulatory_auditor"
+ },
+ {
+  "id": "Q35",
+  "query": "Audit OPSYNVI prescribing information claims",
+  "expected_nodes": [
+   "IM_OPSYNVI",
+   "DOC_FDA_OPSYNVI_SPL"
+  ],
+  "expected_agent": "regulatory_auditor"
+ },
+ {
+  "id": "Q36",
+  "query": "Evidence citation for the ICOTYDE phase 3 trial data",
+  "expected_nodes": [
+   "IM_ICOTYDE",
+   "DOC_ACR_2026_ICOTYDE"
+  ],
+  "expected_agent": "regulatory_auditor"
+ },
+ {
+  "id": "Q37",
+  "query": "Regulatory evidence for Shockwave Javelin IFU",
+  "expected_nodes": [
+   "MT_SHOCKWAVE_JAVELIN",
+   "DOC_SHOCKWAVE_JAVELIN_IFU"
+  ],
+  "expected_agent": "regulatory_auditor"
+ },
+ {
+  "id": "Q38",
+  "query": "FDA label contraindications for OPSYNVI",
+  "expected_nodes": [
+   "IM_OPSYNVI"
+  ],
+  "expected_agent": "regulatory_auditor"
+ },
+ {
+  "id": "Q39",
+  "query": "Audit RYBREVANT HNSCC trial claims",
+  "expected_nodes": [
+   "IM_RYBREVANT_FASPRO",
+   "DOC_RYBREVANT_HNSCC_2026"
+  ],
+  "expected_agent": "regulatory_auditor"
+ },
+ {
+  "id": "Q40",
+  "query": "VELYS technical evidence lineage audit",
+  "expected_nodes": [
+   "MT_VELYS_ROBOT",
+   "DOC_DEPUY_VELYS_TECH"
+  ],
+  "expected_agent": "regulatory_auditor"
+ }
+]

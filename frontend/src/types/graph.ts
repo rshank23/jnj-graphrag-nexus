@@ -8,7 +8,12 @@ export type NodeLabel =
   | "ClinicalCondition"
   | "EvidenceDocument"
   | "BoxedWarning"
-  | "HardwareCoupling";
+  | "HardwareCoupling"
+  | "ClinicalTrial"
+  | "Publication"
+  | "SafetySignal"
+  | "LabelChange"
+  | "Recall";
 
 export const ALL_NODE_LABELS: NodeLabel[] = [
   "Product",
@@ -19,6 +24,11 @@ export const ALL_NODE_LABELS: NodeLabel[] = [
   "EvidenceDocument",
   "BoxedWarning",
   "HardwareCoupling",
+  "ClinicalTrial",
+  "Publication",
+  "SafetySignal",
+  "LabelChange",
+  "Recall",
   "Franchise",
   "BusinessUnit",
 ];
@@ -32,6 +42,11 @@ export const DEFAULT_NODE_LABELS: NodeLabel[] = [
   "EvidenceDocument",
   "BoxedWarning",
   "HardwareCoupling",
+  "ClinicalTrial",
+  "Publication",
+  "SafetySignal",
+  "LabelChange",
+  "Recall",
 ];
 
 export const DIVISIONS = ["All", "J&J MedTech", "J&J Innovative Medicine"] as const;
@@ -88,6 +103,7 @@ export interface HealthPayload {
   backend: string;
   active_store: string;
   llm_mode: string;
+  auth_required?: boolean;
   node_count: number;
   edge_count: number;
   sku_count: number;
@@ -158,9 +174,140 @@ export interface AgentQueryResponse {
   subgraph: GraphPayload;
   citations: Citation[];
   latency_ms: number;
+  confidence: number;
+  risk_level: "low" | "medium" | "high" | "blocked";
+  guardrails: { type?: string; detail?: string; [k: string]: unknown }[];
+  in_scope: boolean;
+  query_id?: number | null;
+  disclaimer?: string | null;
+  llm?: { provider: string; model: string; prompt_version: string; cost_usd?: number } | null;
 }
 
-export type IngestMode = "live" | "dailymed" | "url" | "text" | "pdf";
+export type EvidenceMode =
+  | "openfda_label"
+  | "faers"
+  | "drug_recalls"
+  | "device_recalls"
+  | "gudid"
+  | "maude"
+  | "clinicaltrials"
+  | "pubmed"
+  | "expand";
+
+export type IngestMode = "live" | "dailymed" | "url" | "text" | "pdf" | EvidenceMode;
+
+export type Role = "commercial" | "medical" | "mlr" | "admin";
+
+export type Severity = "critical" | "warning" | "unverified" | "info";
+
+export interface MLRFinding {
+  id: string;
+  claim_id?: string | null;
+  check: string;
+  severity: Severity;
+  title: string;
+  detail: string;
+  evidence: Record<string, unknown>[];
+  suggestion?: string | null;
+  precedents: Record<string, string>[];
+  anchor?: { start: number; end: number } | null;
+  decision?: { decision: string; rationale?: string | null; reviewer?: string | null; ts: string } | null;
+}
+
+export interface MLRClaim {
+  id: string;
+  text: string;
+  start: number;
+  end: number;
+  claim_types: string[];
+  product_ids: string[];
+  verdict: string;
+  confidence: number;
+  library_match?: Record<string, unknown> | null;
+  finding_ids: string[];
+}
+
+export interface MLRReview {
+  review_id: string;
+  title: string;
+  created: string;
+  asset_text: string;
+  claims: MLRClaim[];
+  findings: MLRFinding[];
+  summary: {
+    severity_counts: Record<Severity, number>;
+    risk_score: number;
+    status: "not-ready" | "needs-review" | "ready-for-mlr";
+    claims: number;
+    verdicts: Record<string, number>;
+    products: string[];
+    library_matches: number;
+  };
+  latency_ms: number;
+  disclaimer: string;
+  decisions?: { finding_id: string; decision: string; rationale?: string | null; reviewer?: string | null; ts: string }[];
+}
+
+export interface SourceStatus {
+  source: string;
+  cadence: string;
+  last_success: string | null;
+  last_error: string | null;
+  items: number;
+  age_hours: number | null;
+  due: boolean;
+  status: string;
+}
+
+export interface MLRReviewListItem {
+  review_id: string;
+  created: string;
+  title: string;
+  actor?: string | null;
+  summary: MLRReview["summary"];
+  findings: number;
+  decided: number;
+}
+
+export interface UsageSummary {
+  queries: number;
+  unique_users: number;
+  avg_latency_ms: number;
+  avg_confidence: number;
+  llm_cost_usd: number;
+  by_agent: { routed_agent: string; n: number }[];
+  by_risk: { risk_level: string; n: number }[];
+  feedback: { total: number; positive: number; satisfaction_pct: number | null };
+  daily: { day: string; n: number }[];
+  tool_calls: { tool: string; n: number; avg_ms: number; errors: number }[];
+  llm_usage: { provider: string; model: string; calls: number; prompt_tokens: number; completion_tokens: number; cost_usd: number }[];
+  mlr_reviews: number;
+  mlr_decisions: { decision: string; n: number }[];
+}
+
+export interface ExpandJob {
+  job_id: string;
+  query: string;
+  division: string;
+  phase1: { product_id?: string | null; method: string; name?: string; created?: boolean; messages?: string[] };
+  status: "running" | "complete" | "failed";
+  current_step: string | null;
+  steps: { step: string; status: string; messages: string[]; added_nodes: number; added_edges: number }[];
+}
+
+export interface EvalSummary {
+  n: number;
+  k: number;
+  methods: Record<string, Record<string, number>>;
+  routing_accuracy: number;
+  citation_precision: number;
+  groundedness?: number;
+  answer_entity_hit?: number;
+  failures: { id: string; query: string; expected: string[]; got_top: string[]; expected_agent: string; routed: string }[];
+  dense_method: string;
+  reranker: string;
+  elapsed_s: number;
+}
 
 export interface IngestResponse {
   mode: string;
@@ -184,4 +331,9 @@ export const NODE_COLORS: Record<NodeLabel, string> = {
   EvidenceDocument: "#94A3B8",
   BoxedWarning: "#EF4444",
   HardwareCoupling: "#60A5FA",
+  ClinicalTrial: "#2DD4BF",
+  Publication: "#CBD5E1",
+  SafetySignal: "#FB7185",
+  LabelChange: "#FACC15",
+  Recall: "#B91C1C",
 };

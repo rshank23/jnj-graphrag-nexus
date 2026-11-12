@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Bot, CheckCircle2, Circle, FileCheck2, GitMerge, Loader2, Network, Route, Search, Send, Sparkles, Timer } from "lucide-react";
+import { Bot, CheckCircle2, Circle, FileCheck2, GitMerge, Loader2, Network, Route, Search, Send, ShieldAlert, Sparkles, ThumbsDown, ThumbsUp, Timer } from "lucide-react";
 import { api } from "../api/client";
 import type { AgentQueryResponse } from "../types/graph";
 import { ForceGraphCanvas } from "./GraphExplorer";
@@ -19,6 +19,10 @@ const PRESETS = [
   {
     tag: "Regulatory Auditor",
     query: "Audit the clinical efficacy claims and 2026 trial data for ICOTYDE, RYBREVANT FASPRO, and CARVYKTI with FDA label provenance.",
+  },
+  {
+    tag: "Safety & Label",
+    query: "What is the boxed warning for CARVYKTI and are there any FAERS safety signals or recent label changes?",
   },
   {
     tag: "Software & Couplings",
@@ -40,6 +44,42 @@ const AGENT_LABEL: Record<string, string> = {
   pharma_clinical: "Pharma Clinical Agent",
   regulatory_auditor: "Regulatory Auditor Agent",
 };
+
+const RISK_STYLE: Record<string, string> = {
+  low: "border-emerald-700 bg-emerald-950/40 text-emerald-300",
+  medium: "border-amber-700 bg-amber-950/40 text-amber-300",
+  high: "border-red-700 bg-red-950/40 text-red-300",
+  blocked: "border-red-700 bg-red-950/60 text-red-200",
+};
+
+function Feedback({ queryId }: { queryId: number }) {
+  const [sent, setSent] = useState<-1 | 1 | null>(null);
+  const send = async (r: -1 | 1) => {
+    try {
+      await api.feedback(queryId, r);
+      setSent(r);
+    } catch {
+      /* feedback is best-effort */
+    }
+  };
+  return (
+    <span className="flex items-center gap-1 text-xs text-slate-500">
+      {sent ? (
+        "Thanks for the feedback"
+      ) : (
+        <>
+          Helpful?
+          <button className="rounded p-1 hover:bg-slate-800 hover:text-emerald-300" onClick={() => send(1)} aria-label="Helpful">
+            <ThumbsUp size={13} />
+          </button>
+          <button className="rounded p-1 hover:bg-slate-800 hover:text-red-300" onClick={() => send(-1)} aria-label="Not helpful">
+            <ThumbsDown size={13} />
+          </button>
+        </>
+      )}
+    </span>
+  );
+}
 
 export default function AgentCopilot() {
   const [query, setQuery] = useState(PRESETS[0].query);
@@ -183,9 +223,31 @@ export default function AgentCopilot() {
         {/* Answer */}
         {result && (
           <div className="panel p-5">
+            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className={`pill ${RISK_STYLE[result.risk_level] ?? RISK_STYLE.low}`}>
+                <ShieldAlert size={12} /> risk: {result.risk_level}
+              </span>
+              <span className="pill border-slate-700 bg-slate-800/50 text-slate-300" title="Evidence-weighted answer confidence">
+                confidence {(result.confidence * 100).toFixed(0)}%
+              </span>
+              {!result.in_scope && <span className="pill border-amber-700 bg-amber-950/40 text-amber-300">out of scope</span>}
+              {result.llm && (
+                <span className="pill border-violet-700 bg-violet-950/40 text-violet-300" title={result.llm.prompt_version}>
+                  {result.llm.provider} ? {result.llm.model}
+                </span>
+              )}
+              {result.guardrails.map((g, i) => (
+                <span key={i} className="pill border-amber-800 bg-amber-950/30 text-amber-300" title={String(g.detail ?? "")}>
+                  {String(g.type ?? "guardrail").replace(/_/g, " ")}
+                </span>
+              ))}
+              <span className="flex-1" />
+              {result.query_id ? <Feedback key={result.query_id} queryId={result.query_id} /> : null}
+            </div>
             <div className="markdown">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.answer_markdown}</ReactMarkdown>
             </div>
+            {result.disclaimer && <p className="mt-3 text-[11px] italic text-slate-500">{result.disclaimer}</p>}
             {result.citations.length > 0 && (
               <div className="mt-4 border-t border-slate-800 pt-3">
                 <div className="label-xs mb-2 flex items-center gap-1.5">

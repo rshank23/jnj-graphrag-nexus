@@ -10,3 +10,5 @@ backend/data/raw_pdfs/*.pdf
 
 # Third-party reference index (design reference only, not redistributed)
 similar_repo/
+backend/data/nexus_ops.db*
+backend/data/http_cache/

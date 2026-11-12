@@ -1,5 +1,12 @@
 import type {
   AgentQueryResponse,
+  EvalSummary,
+  ExpandJob,
+  MLRReview,
+  MLRReviewListItem,
+  Role,
+  SourceStatus,
+  UsageSummary,
   BundleRequest,
   BundleResponse,
   EgoPayload,
@@ -18,8 +25,25 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, init);
+const ROLE_KEY = "nexus.role";
+const API_KEY = "nexus.apiKey";
+
+export const session = {
+  role: (): Role => (localStorage.getItem(ROLE_KEY) as Role | null) ?? "medical",
+  setRole: (r: Role) => localStorage.setItem(ROLE_KEY, r),
+  apiKey: (): string => localStorage.getItem(API_KEY) ?? "",
+  setApiKey: (k: string) => (k ? localStorage.setItem(API_KEY, k) : localStorage.removeItem(API_KEY)),
+};
+
+function authHeaders(): Record<string, string> {
+  const h: Record<string, string> = { "X-Nexus-Role": session.role() };
+  const key = session.apiKey();
+  if (key) h["X-Nexus-API-Key"] = key;
+  return h;
+}
+
+async function raw(path: string, init?: RequestInit): Promise<Response> {
+  const res = await fetch(`${BASE}${path}`, { ...init, headers: { ...authHeaders(), ...(init?.headers ?? {}) } });
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -30,7 +54,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new ApiError(res.status, detail || `HTTP ${res.status}`);
   }
-  return (await res.json()) as T;
+  return res;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  return (await (await raw(path, init)).json()) as T;
+}
+
+async function download(path: string, init: RequestInit | undefined, fallbackName: string): Promise<void> {
+  const res = await raw(path, init);
+  const blob = await res.blob();
+  const match = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "");
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = match?.[1] ?? fallbackName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 const json = (body: unknown): RequestInit => ({
@@ -55,6 +97,38 @@ export const api = {
   procedures: () => request<GraphNodeData[]>("/api/procedures"),
 
   bundle: (body: BundleRequest) => request<BundleResponse>("/api/bundle/recommend", json(body)),
+
+  bundleDocx: (body: BundleRequest) => download("/api/bundle/export.docx", json(body), "bundle.docx"),
+
+  me: () => request<{ name: string; role: Role; authenticated: boolean; tier?: string }>("/api/me"),
+
+  feedback: (queryId: number, rating: -1 | 1, comment?: string) =>
+    request<{ feedback_id: number }>("/api/feedback", json({ query_id: queryId, rating, comment })),
+
+  mlrReview: (text: string, title?: string, useLlm = true) => request<MLRReview>("/api/mlr/review", json({ text, title, use_llm: useLlm })),
+  mlrReviews: () => request<MLRReviewListItem[]>("/api/mlr/reviews"),
+  mlrGet: (id: string) => request<MLRReview>(`/api/mlr/${encodeURIComponent(id)}`),
+  mlrDecide: (id: string, findingId: string, decision: "accepted" | "rejected" | "revision", rationale?: string) =>
+    request<Record<string, unknown>>(`/api/mlr/${encodeURIComponent(id)}/decisions`, json({ finding_id: findingId, decision, rationale })),
+  mlrApproveClaim: (id: string, claimId: string) =>
+    request<Record<string, unknown>>(`/api/mlr/${encodeURIComponent(id)}/claims/${encodeURIComponent(claimId)}/approve`, { method: "POST" }),
+  mlrExport: (id: string) => download(`/api/mlr/${encodeURIComponent(id)}/export.docx`, undefined, `mlr_review_${id}.docx`),
+  mlrLibrary: () => request<Record<string, unknown>[]>("/api/mlr/library"),
+
+  sources: () => request<{ sources: SourceStatus[]; sync_modes: string[] }>("/api/sources/status"),
+  sourceSync: (source: string, name: string) =>
+    request<{ status: string; messages: string[]; added_nodes: unknown[]; added_edges: unknown[] }>(
+      `/api/sources/sync/${encodeURIComponent(source)}`,
+      json({ name }),
+    ),
+  sourcesRefresh: () => request<{ refreshed: number; results: { source: string; status: string; messages: string[] }[] }>("/api/sources/refresh", { method: "POST" }),
+  expand: (name: string, division: string) => request<ExpandJob>("/api/expand", json({ name, division, background: true })),
+  expandStatus: (jobId: string) => request<ExpandJob>(`/api/expand/${encodeURIComponent(jobId)}`),
+
+  usage: () => request<UsageSummary>("/api/metrics/usage"),
+  auditVerify: () => request<{ valid: boolean; entries: number; broken_at?: number | null }>("/api/audit/verify"),
+  runEval: () => request<EvalSummary>("/api/eval/run", { method: "POST" }),
+  prompts: () => request<{ name: string; version: string; description?: string }[]>("/api/prompts"),
 
   agentQuery: (query: string, topK = 5, maxHops = 2) =>
     request<AgentQueryResponse>("/api/agent/query", json({ query, top_k: topK, max_hops: maxHops })),

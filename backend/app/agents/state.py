@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import operator
-from typing import Annotated, Any, Dict, List, TypedDict
+from typing import Optional, Annotated, Any, Dict, List, TypedDict
 
 
 class AgentState(TypedDict, total=False):
@@ -21,4 +21,5 @@ class AgentState(TypedDict, total=False):
     answer_markdown: str
     subgraph: Dict[str, Any]
     reranked_passages: List[Dict[str, Any]]
+    llm: Optional[Dict[str, Any]]
     execution_trace: Annotated[List[str], operator.add]
