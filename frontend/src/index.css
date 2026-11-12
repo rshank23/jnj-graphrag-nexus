@@ -8,7 +8,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
@@ -18,26 +18,25 @@ body,
 }
 
 body {
-  @apply bg-slate-950 text-slate-200 antialiased;
+  @apply text-slate-200 antialiased;
   font-feature-settings: "cv11", "ss01", "ss03";
-  background-color: #080b13;
+  background-color: #f4f6fa;
   background-image:
-    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(225, 37, 27, 0.13), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(92, 207, 230, 0.08), transparent 60%),
-    radial-gradient(ellipse 70% 60% at 60% 120%, rgba(120, 90, 220, 0.07), transparent 60%);
+    radial-gradient(ellipse 70% 45% at 0% -10%, rgba(213, 25, 0, 0.06), transparent 60%),
+    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(10, 124, 147, 0.07), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 60% 120%, rgba(169, 119, 31, 0.06), transparent 60%);
   background-attachment: fixed;
 }
 
-/* Fine dot grid behind the content for depth. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(11, 18, 32, 0.06) 1px, transparent 1px);
   background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse at 50% 0%, black 25%, transparent 70%);
 }
 
 #root {
@@ -46,51 +45,49 @@ body::before {
 }
 
 ::selection {
-  background: rgba(92, 207, 230, 0.28);
-  color: #fff;
+  background: rgba(10, 124, 147, 0.18);
+  color: #0b1220;
 }
 
 @layer components {
   .panel {
-    @apply rounded-2xl border border-white/[0.07] shadow-panel backdrop-blur-xl;
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012));
-    background-color: rgba(17, 23, 35, 0.72);
+    @apply rounded-2xl border border-slate-800 bg-snow/90 shadow-panel backdrop-blur-xl;
   }
   .panel-hover {
-    @apply transition duration-300 hover:border-white/[0.12] hover:shadow-glow;
+    @apply transition duration-300 hover:border-clinical/30 hover:shadow-glow;
   }
   .pill {
     @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium tracking-tight transition-colors;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-brand ring-1 ring-inset ring-white/15 transition duration-200 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none;
-    background-image: linear-gradient(135deg, #f0432a 0%, #e1251b 45%, #b31b13 100%);
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-snow shadow-brand ring-1 ring-inset ring-black/5 transition duration-200 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none;
+    background-image: linear-gradient(135deg, #e8381f 0%, #d51900 50%, #a31300 100%);
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-sm font-medium text-slate-200 transition duration-200 hover:border-clinical/50 hover:bg-clinical/[0.06] hover:text-white active:scale-[0.98] disabled:opacity-45;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-snow px-3.5 py-2 text-sm font-medium text-slate-200 shadow-sm transition duration-200 hover:border-clinical/40 hover:bg-clinical/[0.05] hover:text-clinical-dark active:scale-[0.98] disabled:opacity-45;
   }
   .input {
-    @apply w-full rounded-xl border border-white/[0.08] bg-slate-950/60 px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 shadow-inner outline-none transition focus:border-clinical/60 focus:bg-slate-950/80 focus:ring-4 focus:ring-clinical/10;
+    @apply w-full rounded-xl border border-slate-800 bg-snow px-3.5 py-2 text-sm text-slate-100 placeholder-slate-600 shadow-sm outline-none transition focus:border-clinical/60 focus:ring-4 focus:ring-clinical/10;
   }
   .label-xs {
-    @apply text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-400/80;
+    @apply text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-500;
   }
   .display {
-    @apply font-display font-normal tracking-tight text-white;
+    @apply font-display font-normal tracking-tight text-slate-50;
   }
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(120deg, #ffffff 10%, #a6e9f5 55%, #d9b26f 100%);
+    background-image: linear-gradient(120deg, #0b1220 10%, #0a7c93 55%, #a9771f 100%);
   }
   .hairline {
     @apply h-px w-full;
-    background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background-image: linear-gradient(90deg, transparent, rgba(11, 18, 32, 0.12), transparent);
   }
   .nav-item {
-    @apply relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium text-slate-400 transition duration-200 hover:bg-white/[0.04] hover:text-slate-100;
+    @apply relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium text-slate-400 transition duration-200 hover:bg-slate-950 hover:text-slate-100;
   }
   .nav-item-active {
-    @apply bg-white/[0.06] text-white shadow-panel;
+    @apply bg-snow text-slate-50 shadow-panel ring-1 ring-slate-800;
   }
 }
 
@@ -99,11 +96,12 @@ select {
   background-color: transparent;
 }
 option {
-  background: #111723;
+  background: #ffffff;
+  color: #0b1220;
 }
 
 .markdown h2 {
-  @apply mb-2 mt-1 font-display text-2xl font-normal text-white;
+  @apply mb-2 mt-1 font-display text-2xl font-normal text-slate-50;
 }
 .markdown h3 {
   @apply mb-2 mt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-clinical;
@@ -115,19 +113,19 @@ option {
   @apply my-2 list-disc space-y-1 pl-5 text-sm text-slate-300 marker:text-slate-600;
 }
 .markdown strong {
-  @apply font-semibold text-white;
+  @apply font-semibold text-slate-50;
 }
 .markdown code {
-  @apply rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[11px] text-clinical-light;
+  @apply rounded-md border border-clinical/15 bg-clinical/[0.06] px-1.5 py-0.5 font-mono text-[11px] text-clinical-dark;
 }
 .markdown table {
   @apply my-3 w-full border-collapse overflow-hidden rounded-xl text-xs;
 }
 .markdown th {
-  @apply border-b border-white/10 bg-white/[0.04] px-2.5 py-2 text-left font-semibold text-slate-200;
+  @apply border-b border-slate-800 bg-slate-950 px-2.5 py-2 text-left font-semibold text-slate-200;
 }
 .markdown td {
-  @apply border-b border-white/[0.05] px-2.5 py-2 align-top text-slate-300;
+  @apply border-b border-slate-800/70 px-2.5 py-2 align-top text-slate-300;
 }
 .markdown a {
   @apply text-clinical underline decoration-clinical/40 underline-offset-2 hover:decoration-clinical;
@@ -138,13 +136,13 @@ option {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(11, 18, 32, 0.14);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(11, 18, 32, 0.26);
   background-clip: content-box;
 }
 ::-webkit-scrollbar-track {

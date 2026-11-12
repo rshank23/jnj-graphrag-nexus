@@ -60,7 +60,7 @@ const RADIUS: Partial<Record<NodeLabel, number>> = {
 };
 
 const nodeRadius = (n: GraphNodeData) => (RADIUS[n.label] ?? 6) + Math.min(4, (n.degree ?? 0) * 0.25);
-const nodeColor = (n: GraphNodeData) => n.color ?? NODE_COLORS[n.label] ?? "#CBD5E1";
+const nodeColor = (n: GraphNodeData) => NODE_COLORS[n.label] ?? n.color ?? "#94A3B8";
 const truncate = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
 export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect, className, showLegend = true }: ForceGraphCanvasProps) {
@@ -248,7 +248,7 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         const active = hl ? hl.has(l.source) && hl.has(l.target) : false;
         const touchesHover = hover === l.source || hover === l.target;
         ctx.globalAlpha = hl ? (active ? 0.95 : 0.06) : touchesHover ? 0.9 : 0.42;
-        ctx.strokeStyle = active || touchesHover ? "#5CCFE6" : "#5B6B89";
+        ctx.strokeStyle = active || touchesHover ? "#0A7C93" : "#A7B1C2";
         ctx.lineWidth = (active ? 1.6 : 1) / Math.max(0.6, v.k);
         const dx = t.x - s.x;
         const dy = t.y - s.y;
@@ -272,7 +272,7 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         if ((active && v.k > 0.55) || touchesHover || v.k > 1.6) {
           ctx.globalAlpha = hl && !active ? 0.1 : 0.9;
           ctx.font = `${9 / Math.max(0.8, v.k)}px 'Inter Variable', Inter, sans-serif`;
-          ctx.fillStyle = "#A6E9F5";
+          ctx.fillStyle = "#075F72";
           ctx.textAlign = "center";
           const mx = (s.x + ex) / 2;
           const my = (s.y + ey) / 2;
@@ -295,7 +295,7 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         if (isSel || n.is_focus) {
           ctx.beginPath();
           ctx.arc(p.x, p.y, r + 6, 0, Math.PI * 2);
-          ctx.fillStyle = isSel ? "rgba(225,37,27,0.38)" : "rgba(92,207,230,0.22)";
+          ctx.fillStyle = isSel ? "rgba(213,25,0,0.22)" : "rgba(10,124,147,0.18)";
           ctx.fill();
         }
         ctx.beginPath();
@@ -303,10 +303,10 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         ctx.fillStyle = nodeColor(n);
         ctx.fill();
         ctx.lineWidth = (isSel ? 2.5 : 1.2) / Math.max(0.6, v.k);
-        ctx.strokeStyle = isSel ? "#FFFFFF" : "#080B13";
+        ctx.strokeStyle = isSel ? "#0B1220" : "#FFFFFF";
         ctx.stroke();
         if (n.label === "BoxedWarning") {
-          ctx.fillStyle = "#080B13";
+          ctx.fillStyle = "#FFFFFF";
           ctx.font = `bold ${r * 1.3}px sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
@@ -318,10 +318,10 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
           ctx.font = `${(isSel ? 12 : 10) / Math.max(0.75, v.k)}px 'Inter Variable', Inter, sans-serif`;
           ctx.textAlign = "center";
           ctx.lineWidth = 3 / Math.max(0.75, v.k);
-          ctx.strokeStyle = "rgba(8,11,19,0.92)";
+          ctx.strokeStyle = "rgba(255,255,255,0.92)";
           const text = truncate(n.name, isSel || n.id === hover ? 60 : 30);
           ctx.strokeText(text, p.x, p.y + r + 12 / Math.max(0.75, v.k));
-          ctx.fillStyle = isSel ? "#FFFFFF" : "#E2E8F0";
+          ctx.fillStyle = isSel ? "#0B1220" : "#36415A";
           ctx.fillText(text, p.x, p.y + r + 12 / Math.max(0.75, v.k));
         }
       }
@@ -649,7 +649,7 @@ export default function GraphExplorer({ refreshKey }: { refreshKey: number }) {
       </aside>
 
       {/* Canvas */}
-      <section className="panel relative overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(92,207,230,0.06),transparent_70%)]">
+      <section className="panel relative overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(10,124,147,0.05),transparent_70%)]">
         {loading && (
           <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-lg border border-white/[0.08] bg-slate-900/80 px-2.5 py-1 backdrop-blur text-xs text-slate-400">
             <Loader2 size={12} className="animate-spin" /> Loading graph…

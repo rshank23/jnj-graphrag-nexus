@@ -9,10 +9,10 @@ interface Props {
 }
 
 const TONES = {
-  cyan: { chip: "from-clinical/25 to-clinical/5 text-clinical-light ring-clinical/30", glow: "bg-clinical/20" },
-  violet: { chip: "from-violet-400/25 to-violet-400/5 text-violet-200 ring-violet-400/30", glow: "bg-violet-500/20" },
-  gold: { chip: "from-gold/30 to-gold/5 text-gold-light ring-gold/30", glow: "bg-gold/20" },
-  emerald: { chip: "from-emerald-400/25 to-emerald-400/5 text-emerald-200 ring-emerald-400/30", glow: "bg-emerald-500/20" },
+  cyan: { chip: "from-clinical/15 to-clinical/5 text-clinical ring-clinical/20", glow: "bg-clinical/15" },
+  violet: { chip: "from-violet-600/15 to-violet-600/5 text-violet-300 ring-violet-600/20", glow: "bg-violet-500/15" },
+  gold: { chip: "from-gold/15 to-gold/5 text-gold ring-gold/25", glow: "bg-gold/15" },
+  emerald: { chip: "from-emerald-600/15 to-emerald-600/5 text-emerald-300 ring-emerald-600/20", glow: "bg-emerald-500/15" },
 } as const;
 
 function Metric({ icon, label, value, sub, tone, loading }: { icon: React.ReactNode; label: string; value: string; sub?: string; tone: keyof typeof TONES; loading?: boolean }) {
@@ -24,7 +24,7 @@ function Metric({ icon, label, value, sub, tone, loading }: { icon: React.ReactN
         <div className="min-w-0">
           <div className="label-xs">{label}</div>
           {loading ? (
-            <div className="mt-2 h-8 w-24 animate-shimmer rounded-lg bg-[linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.09),rgba(255,255,255,0.03))] bg-[length:200%_100%]" />
+            <div className="mt-2 h-8 w-24 animate-shimmer rounded-lg bg-[linear-gradient(90deg,rgba(11,18,32,0.04),rgba(11,18,32,0.09),rgba(11,18,32,0.04))] bg-[length:200%_100%]" />
           ) : (
             <div className="mt-1.5 font-display text-[34px] leading-none tracking-tight text-white tabular-nums sm:text-[38px]">{value}</div>
           )}
@@ -66,7 +66,7 @@ export default function MetricsRibbon({ refreshKey, onSync }: Props) {
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="pill border-jnj/30 bg-gradient-to-r from-jnj/15 to-transparent text-slate-100">
+          <span className="pill border-jnj/30 bg-gradient-to-r from-jnj/10 to-transparent text-slate-100">
             <ShieldOff size={12} className="text-jnj-light" />
             J&amp;J Innovative Medicine + MedTech
             <span className="mx-1 h-3 w-px bg-white/15" />

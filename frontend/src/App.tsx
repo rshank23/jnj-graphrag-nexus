@@ -65,7 +65,7 @@ type TabId = (typeof TABS)[number]["id"];
 function BrandMark() {
   return (
     <div className="flex items-center gap-3">
-      <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#f0432a] via-jnj to-jnj-dark text-[13px] font-black tracking-tight text-white shadow-brand ring-1 ring-inset ring-white/20">
+      <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#f0432a] via-jnj to-jnj-dark text-[13px] font-black tracking-tight text-snow shadow-brand ring-1 ring-inset ring-black/5">
         J&amp;J
       </div>
       <div className="leading-tight">
@@ -110,7 +110,7 @@ export default function App() {
 
   const sessionControls = (
     <div className="space-y-2">
-      <label className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-slate-950/50 px-3 py-2 text-xs text-slate-400 transition focus-within:border-clinical/50" title="Role sent as X-Nexus-Role (ignored when an API key is set)">
+      <label className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-snow px-3 py-2 text-xs text-slate-400 shadow-sm transition focus-within:border-clinical/50" title="Role sent as X-Nexus-Role (ignored when an API key is set)">
         <UserCircle2 size={14} className="shrink-0 text-slate-500" />
         <span className="text-slate-500">Role</span>
         <select className="ml-auto cursor-pointer bg-transparent text-right font-medium capitalize text-slate-100 outline-none" value={role} onChange={(e) => changeRole(e.target.value as Role)}>
@@ -121,7 +121,7 @@ export default function App() {
           ))}
         </select>
       </label>
-      <label className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-slate-950/50 px-3 py-2 text-xs text-slate-400 transition focus-within:border-clinical/50" title="Optional API key (X-Nexus-API-Key) when REQUIRE_API_KEY=true">
+      <label className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-snow px-3 py-2 text-xs text-slate-400 shadow-sm transition focus-within:border-clinical/50" title="Optional API key (X-Nexus-API-Key) when REQUIRE_API_KEY=true">
         <KeyRound size={14} className="shrink-0 text-slate-500" />
         <input
           type="password"
@@ -139,7 +139,7 @@ export default function App() {
 
   return (
     <div className="flex min-h-full">
-      <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-white/[0.06] bg-slate-950/40 px-4 py-5 backdrop-blur-xl lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-slate-800 bg-snow/70 px-4 py-5 backdrop-blur-xl lg:flex">
         <BrandMark />
         <div className="hairline my-5" />
         <div className="label-xs mb-2 px-3">Workspace</div>
@@ -169,7 +169,7 @@ export default function App() {
         <div className="mt-auto space-y-3">
           <div className="label-xs px-1">Session</div>
           {sessionControls}
-          <div className="rounded-xl border border-white/[0.06] bg-gradient-to-br from-white/[0.04] to-transparent p-3">
+          <div className="rounded-xl border border-white/[0.06] bg-snow p-3 shadow-sm">
             <div className="flex items-center gap-2 text-xs">
               <span className={`h-2 w-2 rounded-full ${online === false ? "bg-red-400" : online ? "animate-pulseRing bg-emerald-400" : "bg-slate-500"}`} />
               <span className="font-medium text-slate-200">{online === false ? "Backend offline" : online ? "All systems operational" : "Connecting…"}</span>
@@ -190,7 +190,7 @@ export default function App() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-slate-950/70 px-4 py-3 backdrop-blur-xl lg:hidden">
+        <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-snow/80 px-4 py-3 backdrop-blur-xl lg:hidden">
           <div className="flex items-center justify-between gap-3">
             <BrandMark />
           </div>
@@ -202,7 +202,7 @@ export default function App() {
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                    tab === t.id ? "bg-white/[0.08] text-white ring-1 ring-inset ring-white/10" : "text-slate-400 hover:text-white"
+                    tab === t.id ? "bg-snow text-slate-50 shadow-sm ring-1 ring-inset ring-slate-800" : "text-slate-400 hover:text-white"
                   }`}
                 >
                   <Icon size={13} />
