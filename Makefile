@@ -14,8 +14,8 @@ help:
 	@echo "make install   - create backend venv + install Python deps, npm install frontend"
 	@echo "make test      - run the full backend pytest suite"
 	@echo "make backend   - run FastAPI on http://localhost:8000"
-	@echo "make frontend  - run Vite dev server on http://localhost:5173"
-	@echo "make dev       - run backend + frontend together (./start.sh)"
+	@echo "make frontend  - run only the Vite dev server on http://localhost:5173"
+	@echo "make dev       - run backend + frontend together (npm run dev)"
 	@echo "make build     - type-check and build the production frontend bundle"
 	@echo "make reseed    - wipe the persisted graph and reload the golden J&J dataset"
 
@@ -36,10 +36,10 @@ backend:
 	cd backend && ../$(PY) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 frontend:
-	cd frontend && npm run dev
+	cd frontend && npm run dev:vite
 
 dev:
-	bash ./start.sh
+	npm run dev
 
 build:
 	cd frontend && npm run build

@@ -1,0 +1,14 @@
+{
+  "name": "jnj-graphrag-nexus",
+  "private": true,
+  "type": "module",
+  "description": "J&J GraphRAG Nexus - one command (npm run dev) starts backend + frontend",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm --prefix frontend run build",
+    "test": "node -e \"process.exit(require('child_process').spawnSync(process.platform==='win32'?'.venv/Scripts/python.exe':'.venv/bin/python',['-m','pytest','tests','-q'],{cwd:'backend',stdio:'inherit'}).status)\""
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

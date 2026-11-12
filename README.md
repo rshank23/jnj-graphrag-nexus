@@ -46,22 +46,25 @@ backend/   FastAPI
 
 ## Quick start
 
+Prerequisites: Node 18+ and Python 3.10+. Then, from the repo root:
+
 ```bash
-make install     # backend venv + pip install, frontend npm install
-make test        # full backend pytest suite (57 tests, offline)
-./start.sh       # FastAPI on :8000 + Vite on :5173  (or: make dev)
+npm run dev
 ```
+
+That single command works on Windows, macOS and Linux. It:
+
+1. creates `backend/.venv` and installs Python dependencies on the first run (and again whenever `requirements.txt` changes)
+2. runs `npm install` for the frontend if `node_modules` is missing
+3. starts FastAPI on :8000 with hot reload and waits until `/api/health` is green
+4. starts Vite on :5173
+
+Logs from both processes appear in one terminal, prefixed `[api]` / `[web]`. Ctrl+C stops both. Running `npm run dev` inside `frontend/` does the same thing.
 
 Open http://localhost:5173. Interactive API docs are at http://localhost:8000/docs.
+Ports can be overridden with `BACKEND_PORT` / `FRONTEND_PORT`, and the Python interpreter with `PYTHON`.
 
-Windows (PowerShell) without make/bash:
-
-```powershell
-py -3.12 -m venv backend\.venv
-backend\.venv\Scripts\python -m pip install -r backend\requirements.txt
-cd backend; ..\backend\.venv\Scripts\python -m uvicorn app.main:app --port 8000   # terminal 1
-cd frontend; npm install; npm run dev                                              # terminal 2
-```
+Other commands: `npm test` runs the backend pytest suite (57 tests, offline). `npm run build` builds the production frontend bundle. `make install|test|backend|frontend` still work.
 
 Docker (with Neo4j): `docker compose up`.
 
