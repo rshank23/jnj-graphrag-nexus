@@ -104,3 +104,8 @@ Example: AFib ablation at 500 procedures/yr gives a $451,000 baseline, $4,695 pe
 - All FastAPI endpoints
 
 It uses FastAPI `TestClient` and runs fully offline.
+
+## Further reading
+
+- [PITCH.md](PITCH.md): business case, ROI model and pilot ask
+- [IMPROVEMENTS.md](IMPROVEMENTS.md): prioritised roadmap benchmarked against 9 reference pharma/biomed GraphRAG and MLR repos

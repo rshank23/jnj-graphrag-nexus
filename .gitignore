@@ -7,3 +7,6 @@ frontend/node_modules/
 frontend/dist/
 backend/data/jnj_graph.json
 backend/data/raw_pdfs/*.pdf
+
+# Third-party reference index (design reference only, not redistributed)
+similar_repo/
