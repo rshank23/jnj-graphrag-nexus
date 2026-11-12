@@ -248,7 +248,7 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         const active = hl ? hl.has(l.source) && hl.has(l.target) : false;
         const touchesHover = hover === l.source || hover === l.target;
         ctx.globalAlpha = hl ? (active ? 0.95 : 0.06) : touchesHover ? 0.9 : 0.42;
-        ctx.strokeStyle = active || touchesHover ? "#67E8F9" : "#64748B";
+        ctx.strokeStyle = active || touchesHover ? "#5CCFE6" : "#5B6B89";
         ctx.lineWidth = (active ? 1.6 : 1) / Math.max(0.6, v.k);
         const dx = t.x - s.x;
         const dy = t.y - s.y;
@@ -271,8 +271,8 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         ctx.fill();
         if ((active && v.k > 0.55) || touchesHover || v.k > 1.6) {
           ctx.globalAlpha = hl && !active ? 0.1 : 0.9;
-          ctx.font = `${9 / Math.max(0.8, v.k)}px Inter, sans-serif`;
-          ctx.fillStyle = "#A5F3FC";
+          ctx.font = `${9 / Math.max(0.8, v.k)}px 'Inter Variable', Inter, sans-serif`;
+          ctx.fillStyle = "#A6E9F5";
           ctx.textAlign = "center";
           const mx = (s.x + ex) / 2;
           const my = (s.y + ey) / 2;
@@ -295,7 +295,7 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         if (isSel || n.is_focus) {
           ctx.beginPath();
           ctx.arc(p.x, p.y, r + 6, 0, Math.PI * 2);
-          ctx.fillStyle = isSel ? "rgba(213,25,0,0.35)" : "rgba(34,211,238,0.22)";
+          ctx.fillStyle = isSel ? "rgba(225,37,27,0.38)" : "rgba(92,207,230,0.22)";
           ctx.fill();
         }
         ctx.beginPath();
@@ -303,10 +303,10 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         ctx.fillStyle = nodeColor(n);
         ctx.fill();
         ctx.lineWidth = (isSel ? 2.5 : 1.2) / Math.max(0.6, v.k);
-        ctx.strokeStyle = isSel ? "#FFFFFF" : "#0F172A";
+        ctx.strokeStyle = isSel ? "#FFFFFF" : "#080B13";
         ctx.stroke();
         if (n.label === "BoxedWarning") {
-          ctx.fillStyle = "#0F172A";
+          ctx.fillStyle = "#080B13";
           ctx.font = `bold ${r * 1.3}px sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
@@ -315,10 +315,10 @@ export function ForceGraphCanvas({ nodes, links, selectedId, highlight, onSelect
         }
         const showLabel = isSel || n.id === hover || (hl ? hl.has(n.id) && v.k > 0.45 : v.k > 0.95) || (n.label === "Procedure" && v.k > 0.5);
         if (showLabel && on) {
-          ctx.font = `${(isSel ? 12 : 10) / Math.max(0.75, v.k)}px Inter, sans-serif`;
+          ctx.font = `${(isSel ? 12 : 10) / Math.max(0.75, v.k)}px 'Inter Variable', Inter, sans-serif`;
           ctx.textAlign = "center";
           ctx.lineWidth = 3 / Math.max(0.75, v.k);
-          ctx.strokeStyle = "rgba(2,6,23,0.9)";
+          ctx.strokeStyle = "rgba(8,11,19,0.92)";
           const text = truncate(n.name, isSel || n.id === hover ? 60 : 30);
           ctx.strokeText(text, p.x, p.y + r + 12 / Math.max(0.75, v.k));
           ctx.fillStyle = isSel ? "#FFFFFF" : "#E2E8F0";
@@ -591,7 +591,7 @@ export default function GraphExplorer({ refreshKey }: { refreshKey: number }) {
   const str = (k: string) => (typeof p[k] === "string" ? (p[k] as string) : undefined);
 
   return (
-    <div className="grid h-[calc(100vh-215px)] min-h-[560px] grid-cols-[250px_1fr_auto] gap-3">
+    <div className="grid h-[calc(100vh-110px)] min-h-[620px] grid-cols-[250px_1fr_auto] gap-4">
       {/* Left sidebar */}
       <aside className="panel flex flex-col gap-4 overflow-y-auto p-4">
         <div>
@@ -614,7 +614,7 @@ export default function GraphExplorer({ refreshKey }: { refreshKey: number }) {
               <button
                 key={d}
                 onClick={() => setDivision(d)}
-                className={`pill ${division === d ? "border-jnj bg-jnj/20 text-white" : "border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                className={`pill ${division === d ? "border-jnj/50 bg-jnj/15 text-white" : "border-white/[0.08] text-slate-400 hover:border-white/20 hover:text-slate-200"}`}
               >
                 {d}
               </button>
@@ -627,7 +627,7 @@ export default function GraphExplorer({ refreshKey }: { refreshKey: number }) {
           </div>
           <div className="space-y-1">
             {ALL_NODE_LABELS.map((t) => (
-              <label key={t} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-slate-300 hover:bg-slate-800/60">
+              <label key={t} className="flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 text-[13px] text-slate-300 transition hover:bg-white/[0.04]">
                 <input type="checkbox" className="accent-cyan-400" checked={types.has(t)} onChange={() => toggleType(t)} />
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: NODE_COLORS[t] }} />
                 {t}
@@ -635,7 +635,7 @@ export default function GraphExplorer({ refreshKey }: { refreshKey: number }) {
             ))}
           </div>
         </div>
-        <div className="mt-auto rounded-lg border border-slate-800 bg-slate-950/50 p-3 text-xs text-slate-400">
+        <div className="mt-auto rounded-xl border border-white/[0.06] bg-slate-950/40 p-3 text-xs text-slate-400">
           <div className="flex items-center justify-between">
             <span>Visible nodes</span>
             <span className="font-mono text-clinical">{display.nodes.length}</span>
@@ -649,15 +649,15 @@ export default function GraphExplorer({ refreshKey }: { refreshKey: number }) {
       </aside>
 
       {/* Canvas */}
-      <section className="panel relative overflow-hidden">
+      <section className="panel relative overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(92,207,230,0.06),transparent_70%)]">
         {loading && (
-          <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-md bg-slate-900/80 px-2 py-1 text-xs text-slate-400">
+          <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-lg border border-white/[0.08] bg-slate-900/80 px-2.5 py-1 backdrop-blur text-xs text-slate-400">
             <Loader2 size={12} className="animate-spin" /> Loading graph…
           </div>
         )}
         {error && <div className="absolute left-3 top-3 z-10 rounded-md bg-red-950/80 px-3 py-1.5 text-xs text-red-300">{error}</div>}
         {ego && (
-          <div className="absolute left-3 top-3 z-10 rounded-md bg-slate-900/85 px-3 py-1.5 text-xs text-slate-300">
+          <div className="absolute left-3 top-3 z-10 rounded-lg border border-white/[0.08] bg-slate-900/80 px-3 py-1.5 backdrop-blur text-xs text-slate-300">
             Spotlight: <span className="font-semibold text-white">{ego.center.name}</span> · {ego.one_hop.length} one-hop · {ego.two_hop.length} two-hop
           </div>
         )}
@@ -673,7 +673,7 @@ export default function GraphExplorer({ refreshKey }: { refreshKey: number }) {
                 <span className="pill border-slate-700 text-[10px]" style={{ color: center ? NODE_COLORS[center.label] : undefined }}>
                   {center?.label ?? "…"}
                 </span>
-                <h3 className="mt-2 text-base font-bold leading-snug text-white">{center?.name ?? selectedId}</h3>
+                <h3 className="display mt-2 text-2xl leading-tight">{center?.name ?? selectedId}</h3>
                 <div className="font-mono text-[11px] text-slate-500">{selectedId}</div>
               </div>
               <button className="text-slate-500 hover:text-white" onClick={() => select(null)}>

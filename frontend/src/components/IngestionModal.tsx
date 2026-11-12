@@ -83,11 +83,11 @@ export default function IngestionModal({ open, onClose, onIngested }: Props) {
     result?.status === "rejected" ? "border-red-800 bg-red-950/40 text-red-300" : result?.status === "error" ? "border-amber-800 bg-amber-950/40 text-amber-300" : "border-emerald-800 bg-emerald-950/30 text-emerald-300";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070d]/85 p-4" onMouseDown={onClose}>
       <div className="panel max-h-[90vh] w-full max-w-2xl overflow-y-auto bg-slate-900 p-5 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-white">Knowledge Graph Ingestion</h2>
+            <h2 className="display text-[28px] leading-tight">Knowledge Graph Ingestion</h2>
             <p className="text-xs text-slate-400">Sync live J&amp;J / FDA DailyMed sources or ingest custom labels. Kenvue consumer brands are always rejected.</p>
           </div>
           <button className="text-slate-500 hover:text-white" onClick={onClose}>
